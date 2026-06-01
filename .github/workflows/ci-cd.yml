@@ -35,6 +35,4 @@ jobs:
         run: |
           cd ${{ secrets.APP_PATH }}
           git pull origin master
-          /usr/bin/podman compose down
-          /usr/bin/podman compose build
-          /usr/bin/podman compose up -d
+          bash deploy.sh

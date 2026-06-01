@@ -5,6 +5,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-kubsu}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kubsu}
       POSTGRES_DB: ${POSTGRES_DB:-kubsu}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,10 +20,9 @@ services:
     build:
       context: .
       target: production
-    ports:
-      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    network_mode: host
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-kubsu}:${POSTGRES_PASSWORD:-kubsu}@db:5432/${POSTGRES_DB:-kubsu}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-kubsu}:${POSTGRES_PASSWORD:-kubsu}@127.0.0.1:5432/${POSTGRES_DB:-kubsu}
       APP_PORT: ${APP_PORT:-8000}
     depends_on:
       db:
