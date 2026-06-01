@@ -12,19 +12,19 @@ podman build --target production -t kubsu_app .
 
 podman run -d \
     --name docker_db_1 \
+    --network host \
     --restart unless-stopped \
     -v kubsu_postgres_data:/var/lib/postgresql/data \
     -e POSTGRES_USER=kubsu \
     -e POSTGRES_PASSWORD=kubsu \
     -e POSTGRES_DB=kubsu \
-    --health-cmd "pg_isready -U kubsu" \
-    --health-interval 5s \
-    --health-timeout 5s \
-    --health-retries 5 \
     postgres:16-alpine
 
 echo "Waiting for postgres..."
-until podman healthcheck run docker_db_1 2>/dev/null; do sleep 2; done
+for i in $(seq 1 30); do
+    podman exec docker_db_1 pg_isready -U kubsu 2>/dev/null && break
+    sleep 2
+done
 
 podman run -d \
     --name docker_app_1 \
