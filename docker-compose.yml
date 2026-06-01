@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kubsu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kubsu}
+      POSTGRES_DB: ${POSTGRES_DB:-kubsu}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kubsu}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      target: production
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-kubsu}:${POSTGRES_PASSWORD:-kubsu}@db:5432/${POSTGRES_DB:-kubsu}
+      APP_PORT: ${APP_PORT:-8000}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

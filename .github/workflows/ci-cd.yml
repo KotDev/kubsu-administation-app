@@ -1,0 +1,40 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in built image
+        run: |
+          docker compose -f docker-compose.test.yml up \
+            --build \
+            --exit-code-from test \
+            --abort-on-container-exit
+
+      - name: Clean up
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ${{ secrets.APP_PATH }}
+            git pull origin master
+            docker compose up --build -d
