@@ -33,7 +33,6 @@ jobs:
 
       - name: Deploy
         run: |
-          export PATH=$PATH:/usr/bin:/usr/local/bin
           cd ${{ secrets.APP_PATH }}
           git pull origin master
-          docker compose up --build -d
+          /usr/bin/podman compose up --build -d
