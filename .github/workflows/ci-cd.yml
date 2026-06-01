@@ -4,13 +4,29 @@ on:
   push:
     branches: [master]
 
+env:
+  IMAGE: ghcr.io/kotdev/kubsu-administation-app:latest
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to registry
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_HOST }} -u ${{ secrets.REGISTRY_USER }} --password-stdin
+
+      - name: Build & Push image
+        run: |
+          docker build --target production -t $IMAGE .
+          docker push $IMAGE
+
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Build test image
         run: docker compose -f docker-compose.test.yml build --no-cache
@@ -27,7 +43,7 @@ jobs:
         run: docker compose -f docker-compose.test.yml down -v
 
   deploy:
-    needs: test
+    needs: [build, test]
     runs-on: self-hosted
 
     steps:
