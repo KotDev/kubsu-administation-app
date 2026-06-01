@@ -12,9 +12,7 @@ services:
       retries: 5
 
   test:
-    build:
-      context: .
-      target: test
+    image: ${IMAGE_TEST}
     environment:
       DATABASE_URL: postgresql+psycopg://kubsu:kubsu@db:5432/kubsu
     depends_on:

@@ -4,8 +4,13 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   IMAGE: ghcr.io/kotdev/kubsu-administation-app:latest
+  IMAGE_TEST: ghcr.io/kotdev/kubsu-administation-app:test
 
 jobs:
   build:
@@ -14,31 +19,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to registry
-        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_HOST }} -u ${{ secrets.REGISTRY_USER }} --password-stdin
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build & Push image
+      - name: Build & Push images
         run: |
           docker build --target production -t $IMAGE .
+          docker build --target test -t $IMAGE_TEST .
           docker push $IMAGE
+          docker push $IMAGE_TEST
 
   test:
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build test image
-        run: docker compose -f docker-compose.test.yml build --no-cache
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Run tests in built image
+      - name: Pull test image
+        run: docker pull $IMAGE_TEST
+
+      - name: Run tests
         run: |
-          docker compose -f docker-compose.test.yml up \
+          IMAGE_TEST=$IMAGE_TEST docker compose -f docker-compose.test.yml up \
             --no-build \
             --exit-code-from test \
             --abort-on-container-exit
 
-      - name: Clean up
+      - name: Cleanup
         if: always()
         run: docker compose -f docker-compose.test.yml down -v
 
