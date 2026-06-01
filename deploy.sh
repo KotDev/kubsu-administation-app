@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-APP_PORT=${APP_PORT:-8000}
-
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
+
+[ -f .env ] && set -a && source .env && set +a
+
+APP_PORT=${APP_PORT:-8000}
 
 podman rm -f docker_app_1 2>/dev/null || true
 podman rm -f docker_db_1  2>/dev/null || true
