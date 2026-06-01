@@ -5,10 +5,8 @@ APP_PORT=${APP_PORT:-8000}
 
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
-podman stop docker_app_1 2>/dev/null || true
-podman rm   docker_app_1 2>/dev/null || true
-podman stop docker_db_1  2>/dev/null || true
-podman rm   docker_db_1  2>/dev/null || true
+podman rm -f docker_app_1 2>/dev/null || true
+podman rm -f docker_db_1  2>/dev/null || true
 
 podman build --target production -t kubsu_app .
 
