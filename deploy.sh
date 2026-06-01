@@ -8,7 +8,7 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)
 podman rm -f docker_app_1 2>/dev/null || true
 podman rm -f docker_db_1  2>/dev/null || true
 
-podman build --target production -t kubsu_app .
+podman build --target production -t localhost/kubsu_app .
 
 podman run -d \
     --name docker_db_1 \
@@ -32,4 +32,4 @@ podman run -d \
     --restart unless-stopped \
     -e DATABASE_URL=postgresql+psycopg://kubsu:kubsu@127.0.0.1:5432/kubsu \
     -e APP_PORT="$APP_PORT" \
-    kubsu_app
+    localhost/kubsu_app
